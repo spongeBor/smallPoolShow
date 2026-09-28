@@ -230,7 +230,7 @@ a:focus-visible {
   bottom: 64px;
   left: 50%;
   display: flex;
-  min-width: min(560px, calc(100vw - 40px));
+  min-width: min(840px, calc(100vw - 40px));
   align-items: center;
   justify-content: space-between;
   gap: 18px;
@@ -267,7 +267,8 @@ a:focus-visible {
 }
 
 .primary-action,
-.secondary-action {
+.secondary-action,
+.add-action {
   min-height: 44px;
   padding: 0 17px;
   border: 0;
@@ -297,10 +298,32 @@ a:focus-visible {
   border: 1px solid var(--line);
 }
 
+.add-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.add-action span {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
 .primary-action:hover,
-.secondary-action:hover {
+.secondary-action:hover,
+.add-action:hover:not(:disabled) {
   filter: brightness(1.06);
   transform: translateY(-1px);
+}
+
+.add-action:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .gesture-hint {
@@ -384,6 +407,21 @@ footer a:hover {
 
   .interaction-panel {
     bottom: 61px;
+    width: calc(100vw - 40px);
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    padding: 12px;
+  }
+
+  .interaction-panel__status {
+    justify-content: center;
+  }
+
+  .interaction-panel__buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -467,7 +505,8 @@ footer a:hover {
   }
 
   .primary-action,
-  .secondary-action {
+  .secondary-action,
+  .add-action {
     justify-content: center;
     padding: 0 11px;
   }

@@ -10,6 +10,25 @@ const randomPondPoint = () => {
   }
 }
 
+const MAX_FISH = 30
+const MAX_TURTLES = 8
+
+const createFish = (id) => ({
+  id: `fish-${id}`,
+  size: 0.7 + Math.random() * 0.55,
+  phase: Math.random() * Math.PI * 2,
+  pace: 0.86 + Math.random() * 0.3,
+  orbit: 0.86 + Math.random() * 0.28,
+})
+
+const createTurtle = (id) => ({
+  id: `turtle-${id}`,
+  size: 0.75 + Math.random() * 0.45,
+  phase: Math.random() * Math.PI * 2,
+  pace: 0.82 + Math.random() * 0.28,
+  orbit: 0.82 + Math.random() * 0.3,
+})
+
 function App() {
   const [isNight, setIsNight] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
@@ -17,7 +36,10 @@ function App() {
   const [feedCount, setFeedCount] = useState(0)
   const [turtleSignal, setTurtleSignal] = useState(0)
   const [message, setMessage] = useState('拖动观察池塘，点击水面即可投喂')
+  const [fish, setFish] = useState(() => Array.from({ length: 8 }, (_, index) => createFish(index)))
+  const [turtles, setTurtles] = useState(() => [createTurtle(0)])
   const audioContext = useRef(null)
+  const animalSequence = useRef(8)
 
   const playWaterTone = useCallback((kind = 'drop') => {
     if (!soundOn) return
@@ -52,9 +74,29 @@ function App() {
 
   const callTurtle = useCallback(() => {
     setTurtleSignal((signal) => signal + 1)
-    setMessage('小龟探出头来和你打招呼')
+    setMessage(turtles.length > 1 ? '小龟们探出头来回应你的呼唤' : '小龟探出头来和你打招呼')
     playWaterTone('turtle')
-  }, [playWaterTone])
+  }, [playWaterTone, turtles.length])
+
+  const addFish = () => {
+    if (fish.length >= MAX_FISH) {
+      setMessage(`池塘最多容纳 ${MAX_FISH} 尾鱼`)
+      return
+    }
+    animalSequence.current += 1
+    setFish((current) => [...current, createFish(animalSequence.current)])
+    setMessage('一尾体型各异的新鱼游入了池塘')
+  }
+
+  const addTurtle = () => {
+    if (turtles.length >= MAX_TURTLES) {
+      setMessage(`池塘最多容纳 ${MAX_TURTLES} 只龟`)
+      return
+    }
+    animalSequence.current += 1
+    setTurtles((current) => [...current, createTurtle(animalSequence.current)])
+    setMessage('一只新龟慢慢游入了池塘')
+  }
 
   return (
     <main className={isNight ? 'app app--night' : 'app'}>
@@ -63,6 +105,8 @@ function App() {
           isNight={isNight}
           food={food}
           turtleSignal={turtleSignal}
+          fish={fish}
+          turtles={turtles}
           onFeed={feedPond}
           onTurtle={callTurtle}
         />
@@ -103,8 +147,8 @@ function App() {
           <p className="eyebrow">今日池畔</p>
           <p className="observation-card__time">{isNight ? '月影初上' : '风和日暖'}</p>
           <div className="observation-card__stats">
-            <span><strong>8</strong> 尾鱼</span>
-            <span><strong>1</strong> 只龟</span>
+            <span><strong>{fish.length}</strong> 尾鱼</span>
+            <span><strong>{turtles.length}</strong> 只龟</span>
             <span><strong>{feedCount}</strong> 次投喂</span>
           </div>
           <p className="observation-card__note">轻轻转动视角，看看睡莲下藏着谁。</p>
@@ -122,6 +166,24 @@ function App() {
             </button>
             <button className="secondary-action" type="button" onClick={callTurtle}>
               呼唤小龟
+            </button>
+            <button
+              className="add-action"
+              type="button"
+              onClick={addFish}
+              disabled={fish.length >= MAX_FISH}
+              aria-label={`增加一尾随机大小的鱼，当前 ${fish.length} 尾，最多 ${MAX_FISH} 尾`}
+            >
+              <span aria-hidden="true">＋</span> 添一尾鱼
+            </button>
+            <button
+              className="add-action"
+              type="button"
+              onClick={addTurtle}
+              disabled={turtles.length >= MAX_TURTLES}
+              aria-label={`增加一只随机大小的龟，当前 ${turtles.length} 只，最多 ${MAX_TURTLES} 只`}
+            >
+              <span aria-hidden="true">＋</span> 添一只龟
             </button>
           </div>
         </div>

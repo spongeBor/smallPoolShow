@@ -106,17 +106,17 @@ function WaterSurface({ isNight, onFeed }) {
   )
 }
 
-function Fish({ index, food, isNight }) {
+function Fish({ fish, index, food, isNight }) {
   const group = useRef()
   const tail = useRef()
   const leftFin = useRef()
   const rightFin = useRef()
-  const [bodyColor, detailColor] = fishPalette[index]
+  const [bodyColor, detailColor] = fishPalette[index % fishPalette.length]
   const temp = useMemo(() => new THREE.Vector3(), [])
-  const speed = 0.16 + (index % 3) * 0.026
-  const radiusX = 1.5 + (index % 4) * 0.6
-  const radiusZ = 0.82 + (index % 3) * 0.44
-  const phase = (index / fishPalette.length) * Math.PI * 2
+  const speed = (0.16 + (index % 3) * 0.026) * fish.pace
+  const radiusX = (1.5 + (index % 4) * 0.6) * fish.orbit
+  const radiusZ = (0.82 + (index % 3) * 0.44) * fish.orbit
+  const phase = fish.phase
 
   useFrame(({ clock }, delta) => {
     if (!group.current) return
@@ -155,7 +155,7 @@ function Fish({ index, food, isNight }) {
     if (rightFin.current) rightFin.current.rotation.x = 0.45 - Math.sin(time * 4.2 + index) * 0.18
   })
 
-  const scale = 0.62 + (index % 3) * 0.07
+  const scale = (0.62 + (index % 3) * 0.035) * fish.size
   return (
     <group ref={group} scale={scale}>
       <mesh castShadow scale={[1.48, 0.43, 0.58]}>
@@ -203,7 +203,7 @@ function Fish({ index, food, isNight }) {
   )
 }
 
-function Turtle({ signal, onTurtle, isNight }) {
+function Turtle({ turtle: turtleData, index, signal, onTurtle, isNight }) {
   const turtle = useRef()
   const head = useRef()
   const frontLeft = useRef()
@@ -222,9 +222,11 @@ function Turtle({ signal, onTurtle, isNight }) {
     if (!turtle.current) return
     const time = clock.elapsedTime
     const excited = performance.now() < excitedUntil
-    const angle = time * (excited ? 0.31 : 0.072) + 1.4
-    turtle.current.position.x = Math.cos(angle) * 2.2
-    turtle.current.position.z = Math.sin(angle) * 1.28 + 0.25
+    const angle = time * (excited ? 0.31 : 0.072) * turtleData.pace + turtleData.phase
+    const orbitX = (1.65 + (index % 3) * 0.42) * turtleData.orbit
+    const orbitZ = (0.92 + (index % 2) * 0.34) * turtleData.orbit
+    turtle.current.position.x = Math.cos(angle) * orbitX
+    turtle.current.position.z = Math.sin(angle) * orbitZ + (index % 2 ? -0.22 : 0.22)
     turtle.current.position.y = 0.13 + Math.sin(time * 1.1) * 0.022
     turtle.current.rotation.y = -angle + Math.PI / 2
     if (head.current) head.current.position.x = 0.72 + (excited ? Math.sin(time * 7) * 0.065 : 0)
@@ -241,7 +243,7 @@ function Turtle({ signal, onTurtle, isNight }) {
   return (
     <group
       ref={turtle}
-      scale={0.7}
+      scale={0.7 * turtleData.size}
       onClick={handleClick}
       onPointerEnter={() => { document.body.style.cursor = 'pointer' }}
       onPointerLeave={() => { document.body.style.cursor = 'default' }}
@@ -416,7 +418,7 @@ function Shore() {
   )
 }
 
-function PondWorld({ isNight, food, turtleSignal, onFeed, onTurtle }) {
+function PondWorld({ isNight, food, turtleSignal, fish, turtles, onFeed, onTurtle }) {
   return (
     <>
       <color attach="background" args={[isNight ? '#09161b' : '#a6b9b1']} />
@@ -437,8 +439,19 @@ function PondWorld({ isNight, food, turtleSignal, onFeed, onTurtle }) {
       {lilyData.map((lily, index) => <LilyPad key={index} data={lily} index={index} />)}
       <Reeds />
 
-      {fishPalette.map((_, index) => <Fish key={index} index={index} food={food} isNight={isNight} />)}
-      <Turtle signal={turtleSignal} onTurtle={onTurtle} isNight={isNight} />
+      {fish.map((fishData, index) => (
+        <Fish key={fishData.id} fish={fishData} index={index} food={food} isNight={isNight} />
+      ))}
+      {turtles.map((turtleData, index) => (
+        <Turtle
+          key={turtleData.id}
+          turtle={turtleData}
+          index={index}
+          signal={turtleSignal}
+          onTurtle={onTurtle}
+          isNight={isNight}
+        />
+      ))}
       <FoodRipple food={food} />
 
       <ContactShadows position={[0, -0.04, 0]} opacity={isNight ? 0.22 : 0.34} scale={13} blur={2.8} far={6} />
