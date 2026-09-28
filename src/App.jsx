@@ -32,7 +32,8 @@ const createTurtle = (id) => ({
 function App() {
   const [isNight, setIsNight] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
-  const [food, setFood] = useState(null)
+  const [fishFood, setFishFood] = useState(null)
+  const [turtleFood, setTurtleFood] = useState(null)
   const [feedCount, setFeedCount] = useState(0)
   const [turtleSignal, setTurtleSignal] = useState(0)
   const [message, setMessage] = useState('拖动观察池塘，点击水面即可投喂')
@@ -66,15 +67,23 @@ function App() {
 
   const feedPond = useCallback((point) => {
     const nextPoint = point || randomPondPoint()
-    setFood({ ...nextPoint, id: Date.now(), startedAt: performance.now() })
+    setFishFood({ ...nextPoint, id: Date.now(), startedAt: performance.now() })
     setFeedCount((count) => count + 1)
     setMessage('鱼群发现了新鲜的食物')
     playWaterTone('drop')
   }, [playWaterTone])
 
-  const callTurtle = useCallback(() => {
+  const greetTurtle = useCallback(() => {
     setTurtleSignal((signal) => signal + 1)
     setMessage(turtles.length > 1 ? '小龟们探出头来回应你的呼唤' : '小龟探出头来和你打招呼')
+    playWaterTone('turtle')
+  }, [playWaterTone, turtles.length])
+
+  const feedTurtles = useCallback(() => {
+    const nextPoint = randomPondPoint()
+    setTurtleFood({ ...nextPoint, id: Date.now(), startedAt: performance.now() })
+    setFeedCount((count) => count + 1)
+    setMessage(turtles.length > 1 ? '龟群立刻朝龟粮冲了过去' : '小龟立刻朝龟粮游了过去')
     playWaterTone('turtle')
   }, [playWaterTone, turtles.length])
 
@@ -103,12 +112,13 @@ function App() {
       <section className="pond-stage" aria-label="互动式三维池塘">
         <PondScene
           isNight={isNight}
-          food={food}
+          fishFood={fishFood}
+          turtleFood={turtleFood}
           turtleSignal={turtleSignal}
           fish={fish}
           turtles={turtles}
           onFeed={feedPond}
-          onTurtle={callTurtle}
+          onTurtle={greetTurtle}
         />
 
         <header className="topbar">
@@ -164,8 +174,8 @@ function App() {
               <span className="primary-action__icon" aria-hidden="true">•••</span>
               撒一把鱼食
             </button>
-            <button className="secondary-action" type="button" onClick={callTurtle}>
-              呼唤小龟
+            <button className="secondary-action" type="button" onClick={feedTurtles}>
+              投喂龟粮
             </button>
             <button
               className="add-action"
